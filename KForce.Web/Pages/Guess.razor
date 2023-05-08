@@ -1,0 +1,125 @@
+﻿@page "/Guess/{id:int}"
+@inject HttpClient Http
+@inject KForce.Web.Service.ICarService carService
+@inject NavigationManager NavigationManager
+@using System.Globalization
+
+<PageTitle>Guess Price</PageTitle>
+<h3>Guess Price</h3>
+
+<EditForm Model="car">
+    <div>
+        <label for="Make">Make</label>
+        <InputText id="Make" @bind-Value="car.Make" class="form-control" disabled></InputText>
+    </div>
+
+    <div>
+        <label for="Model">Model</label>
+        <InputText id="Model" @bind-Value="car.Model" class="form-control" disabled></InputText>
+    </div>
+
+    <div>
+        <label for="Year">Year</label>
+        <InputNumber id="Year" @bind-Value="car.Year" class="form-control" disabled></InputNumber>
+    </div>
+
+    <div>
+        <label for="Color">Doors</label>
+        <InputNumber id="Door" @bind-Value="@car.Door" class="form-control" disabled></InputNumber>
+    </div>
+
+    <div>
+        <label for="Color">Color</label>
+        <InputText id="Color" @bind-Value="car.Color" class="form-control" disabled></InputText>
+    </div>
+
+    <br />
+
+    <div>
+        <label for="guess">Guess the price:</label>
+        <InputNumber id="guess" @bind-Value="@guess" class="form-control"></InputNumber>
+        <br>
+        <button class="btn btn-primary" @onclick="SubmitGuess">Submit</button>
+        <button type="button" class="btn btn-danger" @onclick="GoBack">Cancel</button>
+    </div>
+    <br />
+</EditForm>
+@if (showResult)
+{
+    <div style="background-color:@resultColor">
+        <p>Your guess: @guess</p>
+        <p>Actual price: @car.Price.ToString("C", CultureInfo.CurrentCulture)</p>
+        <p>@resultText</p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    Models.Car car = new Models.Car();
+
+    string btnText = string.Empty;
+
+    private bool showResult = false;
+
+    private string resultText = "";
+
+    private decimal guess = 0;
+
+    private string resultColor = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Save New Car" : "Update Car";
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            //hero.Comic = SuperHeroService.Comics[0];
+            //hero.ComicId = hero.Comic.Id;
+        }
+        else
+        {
+            car = await Http.GetFromJsonAsync<Models.Car>($"http://localhost:5294/API/Car/carById?id={Id}");//api/cars
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+            await carService.CreateCar(car);
+        else
+            await carService.UpdateCar(car);       
+    }
+
+    private void SubmitGuess()
+    {
+        decimal difference = Math.Abs(guess - car.Price);
+
+        if (difference <= 5000m)
+        {
+            resultText = "Great job! Your guess is within 5,000 of the actual price!";
+            resultColor = "green";
+        }
+        else if (guess == car.Price)
+        {
+            resultText = "Congratulations! Your guess is correct!";
+            resultColor = "green";
+        }
+        else
+        {
+            resultText = $"Sorry, your guess is incorrect. The actual price is {car.Price.ToString("C", CultureInfo.CurrentCulture)}.";
+            resultColor = "red";
+        }
+
+        showResult = true;
+    }
+
+    private void GoBack()=>NavigationManager.NavigateTo("/");
+    
+
+}

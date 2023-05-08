@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "dlU2pHBvu+eOYWb9TMb+8FqhcpXkBPbQGi+WAm4I4dQ=",
+  "Source": "KForce.Service",
+  "BasePath": "_content/KForce.Service",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

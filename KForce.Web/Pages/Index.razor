@@ -1,0 +1,86 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject KForce.Web.Service.ICarService carService
+@inject IJSRuntime JS
+
+
+<h1>Cars</h1>
+
+@if (Cars == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Make</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>Door</th>
+                <th>Color</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var car in Cars)
+            {
+                <tr>
+                    <td>@car.Id</td>
+                    <td>@car.Make</td>
+                    <td>@car.Model</td>
+                    <td>@car.Year</td>
+                    <td>@car.Door</td>
+                    <td>@car.Color</td>
+                    @*<td>@car.Price</td>*@
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditCar(car.Id)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteCar(car)">Delete</button>
+                        <button class="btn btn-warning" @onclick="() => GuessPrice(car.Id)">Guess Price</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-success" @onclick="() => AddCar()">Add Car</button>
+
+@code {
+    private List<Models.Car> Cars;
+
+    protected override async Task OnInitializedAsync()=> Cars = await carService.GetCars();    
+
+    private async Task AddCar()
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Access just for Admin User. Are you Admin user?");
+
+        if (confirm)
+            NavigationManager.NavigateTo("/car");
+    }
+
+    private async Task GuessPrice(int id)=> NavigationManager.NavigateTo($"/Guess/{id}");
+
+    private async Task EditCar(int id)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Access just for Admin User. Are you Admin user?");
+
+        if (confirm)
+            NavigationManager.NavigateTo($"/Car/Edit/{id}");
+    }
+
+    private async Task DeleteCar(Models.Car car)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Are you sure to delete car {car.Make} model {car.Model}");
+
+        if (confirm)
+        {
+            await carService.DeleteCar(car);
+            Cars = await carService.GetCars();
+        }
+    }
+
+}
